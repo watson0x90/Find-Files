@@ -39,7 +39,7 @@ $FilesAndExt = '\.doc|\.xls|\.pdf|\.conf$|password|creditcard';
 Function Find-Files
 {
 
-gdr -PSProvider 'FileSystem' | Where-Object {$_.used -gt 1mb} | foreach {$_.Root} | Get-ChildItem -Force -Recurse| Where-Object {$_.Name -match $FilesAndExt};
+gdr -PSProvider 'FileSystem' | Where-Object {$_.used -gt 1kb} | foreach {$_.Root} | Get-ChildItem -Force -Recurse| Where-Object {$_.Name -match $FilesAndExt};
 
 }
 
@@ -57,7 +57,7 @@ $builder.ToString()
 Function Find-Files-MD5-Evidence
 {
 
-$files = gdr -PSProvider 'FileSystem' | Where-Object {$_.used -gt 1mb} | foreach {$_.Root} | Get-ChildItem -Force -Recurse| Where-Object {$_.Name -match $FilesAndExt} |  select-object FullName;
+$files = gdr -PSProvider 'FileSystem' | Where-Object {$_.used -gt 1kb} | foreach {$_.Root} | Get-ChildItem -Force -Recurse| Where-Object {$_.Name -match $FilesAndExt} |  select-object FullName;
 
 Write-Output "`r`n /* MD5 Hash Values */"
 
