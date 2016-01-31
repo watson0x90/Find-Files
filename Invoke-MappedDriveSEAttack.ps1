@@ -49,9 +49,6 @@ Function Invoke-MappedDriveSEAttack
 
     $ErrorActionPreference = 'SilentlyContinue'
    
-    $errorNoDrive = 'No mapped drives on host. Exiting...'
-
-    
     $Source = @"
 
     using System;
