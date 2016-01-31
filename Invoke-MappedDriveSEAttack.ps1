@@ -122,7 +122,7 @@ Function Invoke-MappedDriveSEAttack
             $retry = Error-BadCredentialsPrompt
             if($retry -eq 2)
             {
-                '## User exited erorr prompt without retry ##'
+                '!! User exited erorr prompt without retry !!'
                 break
             }
         }
