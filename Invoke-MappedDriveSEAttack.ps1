@@ -3,7 +3,7 @@ Function Invoke-MappedDriveSEAttack
 {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $false,Position = 1)]
+        [Parameter(Mandatory = $true,Position = 1)]
         [string]$Drive
 
     )
