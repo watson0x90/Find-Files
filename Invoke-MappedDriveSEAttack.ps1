@@ -71,7 +71,7 @@ Function Invoke-MappedDriveSEAttack
     function Error-BadCredentialsPrompt
     {
         $wshell = New-Object -ComObject Wscript.Shell
-        $wshell.Popup('Bad Username or Password',0,'Fail Authentication',0x5+0x10)
+        $wshell.Popup('Bad Username or Password',0,'Failed Authentication',0x5+0x10)
     }
 
     function Test-Credentials
