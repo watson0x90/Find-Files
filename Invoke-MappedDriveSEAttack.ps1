@@ -23,12 +23,12 @@ Function Invoke-MappedDriveSEAttack
             # You should have received a copy of the GNU General Public License
             # along with Create-Unattend.ps1.  If not, see <http://www.gnu.org/licenses/>.
 
-            .SYNOPSIS Social engineering attack to propmtping users re-enter 
-            credentials for a mapped drive on their computer. This 
-            will perform a check till valid workstation or domain creds
-            are entered. Output will return both valid and unvalid credentials.
+            .SYNOPSIS Social engineering attack to propmtping users re-enter credentials for 
+            a mapped drive on their computer. This will perform a check till valid 
+            workstation or domain creds are entered. Output will return both valid and unvalid credentials.
+            This script has been tested on Windows 7, Windows 8.1, and Windows 10
 
-            This attack requires:
+            The following should be considered:
             1) The user is active
             2) There are mapped drives on the host
 
