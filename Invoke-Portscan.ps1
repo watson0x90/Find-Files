@@ -970,6 +970,11 @@ function Invoke-Portscan
                                     $value.alive = $True
                                     $value.ttl = $pResult.Options.Ttl
                                     return $value
+                                } else {
+                                    $value = '' | Select-Object -Property alive, ttl
+                                    $value.alive = $False
+                                    $value.ttl = 0
+                                    return $value
                                 }
                             }
                             foreach($Port in $hostPortList)
@@ -1025,8 +1030,10 @@ function Invoke-Portscan
                     if(!$SkipDiscovery)
                     {
                         $hostResults = PortScan-Alive -h $thost
+                        
                         [bool]$hostResult = $hostResults.alive
                         $ttlResult = $hostResults.ttl
+
                         $openPorts.clear()
                         $closedPorts.clear()
                         $filteredPorts.Clear()
