@@ -1,3 +1,4 @@
+#requires -Version 2
 
 
 function Invoke-Portscan
@@ -158,6 +159,10 @@ function Invoke-Portscan
                 ValueFromPipeline = $True,
         Mandatory = $True)]
         [String[]] $Hosts,
+
+        [Parameter(ParameterSetName = 'arpHosts',
+        Mandatory = $True)]
+        [switch]  $ArpList,
 
         [Parameter(ParameterSetName = 'fHosts',
         Mandatory = $True)]
@@ -325,6 +330,18 @@ function Invoke-Portscan
                     $hostList.Add($iHost)
                 }
             }
+        }
+
+        Function Get-DynamicArp 
+        {
+            $macarray = @()
+            (ARP.EXE -a) -match 'dynamic' | ForEach-Object -Process {
+                $obj = New-Object -TypeName PSObject -Property @{
+                    IP = ($_ -split '\s+')[1]
+                }
+                $macarray += $obj
+            }
+            ($macarray).IP
         }
 
         function Parse-ILHosts
@@ -684,6 +701,15 @@ function Invoke-Portscan
                     $null = Parse-Hosts($h)
                 }
             }
+            if ($PSCmdlet.ParameterSetName -eq 'arpHosts')
+            {
+                $Hosts = Get-DynamicArp
+
+                foreach($h in $Hosts)
+                {
+                    $null = Parse-Hosts($h)
+                }
+            }
             else
             {
                 $null = Parse-ILHosts($HostFile)
@@ -971,10 +997,12 @@ function Invoke-Portscan
                                 $pResult = $ping.send($h)
                                 if ($pResult.Status -eq 'Success')
                                 {
-                                    try{
+                                    try
+                                    {
                                         $hostdnslkup = [System.Net.Dns]::GetHostbyAddress($h).HostName
                                     }
-                                    catch{
+                                    catch
+                                    {
                                         $hostdnslkup = ''
                                     }
                                     $value = '' | Select-Object -Property alive, ttl, hostnm
@@ -982,7 +1010,9 @@ function Invoke-Portscan
                                     $value.ttl = $pResult.Options.Ttl
                                     $value.hostnm = $hostdnslkup
                                     return $value
-                                } else {
+                                }
+                                else 
+                                {
                                     $value = '' | Select-Object -Property alive, ttl, hostnm
                                     $value.alive = $False
                                     $value.ttl = 0
