@@ -1,3 +1,5 @@
+
+
 function Invoke-Portscan
 {
     <#
@@ -504,6 +506,7 @@ function Invoke-Portscan
                 [Parameter(Mandatory = $True, ParameterSetName = 'HostOut')] $closedPorts,
                 [Parameter(Mandatory = $True, ParameterSetName = 'HostOut')] $filteredPorts,
                 [Parameter(Mandatory = $True, ParameterSetName = 'HostOut')] $ttl,
+                [Parameter(Mandatory = $True, ParameterSetName = 'HostOut')] $dnsHostName,
                 [Parameter()] [bool] $SkipDiscovery,
                 [Parameter()] [System.IO.StreamWriter] $grepStream,
                 [Parameter()] [System.Xml.XmlWriter] $xmlStream,
@@ -540,7 +543,7 @@ function Invoke-Portscan
                         #for grepstream use tabs - can be ugly, but easier for regex
                         if ($isUp -and !$SkipDiscovery) 
                         {
-                            $grepStream.writeline("Host: $outhost`tStatus: Up`tTTL: $ttl")
+                            $grepStream.writeline("Host: $outhost`tStatus: Up`tTTL: $ttl`tHostName: $dnsHostName")
                         }
                         if ($isUp -or $SkipDiscovery) 
                         {
@@ -573,6 +576,7 @@ function Invoke-Portscan
                             {
                                 $xmlStream.WriteAttributeString('Status', 'Up')
                                 $xmlStream.WriteAttributeString('TTL', $ttl)
+                                $xmlStream.WriteAttributeString('HostName', $dnsHostName)
                             }
                             else 
                             {
@@ -613,6 +617,7 @@ function Invoke-Portscan
                         {
                             $readableStream.writeline('Host is up')
                             $readableStream.writeline('TTL is ' + $ttl)
+                            $readableStream.writeline('HostName is ' + $dnsHostName)
                         }
 
                         if ($isUp -or $SkipDiscovery) 
@@ -966,14 +971,22 @@ function Invoke-Portscan
                                 $pResult = $ping.send($h)
                                 if ($pResult.Status -eq 'Success')
                                 {
-                                    $value = '' | Select-Object -Property alive, ttl
+                                    try{
+                                        $hostdnslkup = [System.Net.Dns]::GetHostbyAddress($h).HostName
+                                    }
+                                    catch{
+                                        $hostdnslkup = ''
+                                    }
+                                    $value = '' | Select-Object -Property alive, ttl, hostnm
                                     $value.alive = $True
                                     $value.ttl = $pResult.Options.Ttl
+                                    $value.hostnm = $hostdnslkup
                                     return $value
                                 } else {
-                                    $value = '' | Select-Object -Property alive, ttl
+                                    $value = '' | Select-Object -Property alive, ttl, hostnm
                                     $value.alive = $False
                                     $value.ttl = 0
+                                    $value.hostnm = ''
                                     return $value
                                 }
                             }
@@ -1033,6 +1046,7 @@ function Invoke-Portscan
                         
                         [bool]$hostResult = $hostResults.alive
                         $ttlResult = $hostResults.ttl
+                        $hostnmResult = $hostResults.hostnm
 
                         $openPorts.clear()
                         $closedPorts.clear()
@@ -1047,7 +1061,7 @@ function Invoke-Portscan
                         Start-Sleep -Milliseconds 500
                     }
 
-                    return @($hostResult, $openPorts, $closedPorts, $filteredPorts, $ttlResult)
+                    return @($hostResult, $openPorts, $closedPorts, $filteredPorts, $ttlResult, $hostnmResult)
                 }
             }
 
@@ -1095,6 +1109,7 @@ function Invoke-Portscan
                     $closedPorts = $jobOut[2]
                     $filteredPorts = $jobOut[3]
                     $ttl = $jobOut[4]
+                    $hostDNSName = $jobOut[5]
 
                     if($hostUp) 
                     {
@@ -1112,6 +1127,7 @@ function Invoke-Portscan
                                 $hostObj | Add-Member -MemberType Noteproperty -Name Hostname -Value $jobName
                                 $hostObj | Add-Member -MemberType Noteproperty -Name alive -Value $hostUp
                                 $hostObj | Add-Member -MemberType Noteproperty -Name ttl -Value $ttl
+                                $hostObj | Add-Member -MemberType Noteproperty -Name DNSHostName -Value $hostDNSName
                                 $hostObj | Add-Member -MemberType Noteproperty -Name openPorts -Value $openPorts
                                 $hostObj | Add-Member -MemberType Noteproperty -Name closedPorts -Value $closedPorts
                                 $hostObj | Add-Member -MemberType Noteproperty -Name filteredPorts -Value $filteredPorts
@@ -1126,6 +1142,7 @@ function Invoke-Portscan
                             $hostObj | Add-Member -MemberType Noteproperty -Name Hostname -Value $jobName
                             $hostObj | Add-Member -MemberType Noteproperty -Name alive -Value $hostUp
                             $hostObj | Add-Member -MemberType Noteproperty -Name ttl -Value $ttl
+                            $hostObj | Add-Member -MemberType Noteproperty -Name DNSHostName -Value $hostDNSName
                             $hostObj | Add-Member -MemberType Noteproperty -Name openPorts -Value $openPorts
                             $hostObj | Add-Member -MemberType Noteproperty -Name closedPorts -Value $closedPorts
                             $hostObj | Add-Member -MemberType Noteproperty -Name filteredPorts -Value $filteredPorts
@@ -1134,7 +1151,7 @@ function Invoke-Portscan
                         }
                     }
 
-                    Write-PortscanOut -outhost $jobName -isUp $hostUp -ttl $ttl -openPorts $openPorts -closedPorts $closedPorts -filteredPorts $filteredPorts -grepStream $grepStream -xmlStream $xmlStream -readableStream $readableStream -SkipDiscovery $SkipDiscovery
+                    Write-PortscanOut -outhost $jobName -isUp $hostUp -ttl $ttl -dnsHostName $hostDNSName -openPorts $openPorts -closedPorts $closedPorts -filteredPorts $filteredPorts -grepStream $grepStream -xmlStream $xmlStream -readableStream $readableStream -SkipDiscovery $SkipDiscovery
                 }
 
                 if ($grepStream) 
