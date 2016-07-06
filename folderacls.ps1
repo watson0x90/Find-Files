@@ -9,7 +9,9 @@ function Get-FolderACL
 		
     )
 
-    $PathsToSearch = (Get-ChildItem $Path |
+	$ErrorActionPreference = 'SilentlyContinue'
+	
+    $PathsToSearch = (Get-ChildItem $Path -recurse|
         Where-Object -FilterScript {
             $_.PSIsContainer 
         } |
@@ -18,11 +20,12 @@ function Get-FolderACL
     $weakacllist = @()
     
     foreach($folder in $PathsToSearch)
-    {
+    {	
         $AccessList = ((Get-Item $folder).GetAccessControl('Access')).Access
-        foreach($permission in $AccessList)
+        
+		foreach($permission in $AccessList)
         {
-            if($permission.IdentityReference -like '*domain users*' -or $permission.IdentityReference -like '*everyone*')
+            if($permission.IdentityReference -like '*domain users*' -or $permission.IdentityReference -like 'everyone')
             {
                 $aclObj = New-Object -TypeName System.Object
                 $aclObj | Add-Member -MemberType NoteProperty -Name Path -Value $folder
@@ -34,5 +37,5 @@ function Get-FolderACL
         }
     }
 
-    $weakacllist | Format-List
+    $weakacllist
 }
