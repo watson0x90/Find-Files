@@ -1,5 +1,5 @@
 #requires -Version 2  
-Function Invoke-DriveSEAttack
+Function Invoke-DriveAttack
 {
     <#
             # All credit to the original author(s): Ryan Watson (Watson0x90)
