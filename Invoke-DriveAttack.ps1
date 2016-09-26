@@ -1,25 +1,22 @@
-#requires -Version 2
-<#
-        # All credit to the original author(s): Ryan Watson (Watson0x90)
-        #
-        # Invoke-DriveAttack.ps1 is free software: you can redistribute it and/or modify
-        # it under the terms of the GNU General Public License as published by
-        # the Free Software Foundation, either version 3 of the License, or
-        # (at your option) any later version.
-        #
-        # Invoke-DriveAttack.ps1 is distributed in the hope that it will be useful,
-        # but WITHOUT ANY WARRANTY; without even the implied warranty of
-        # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-        # GNU General Public License for more details.
-        #
-        # You should have received a copy of the GNU General Public License
-        # along with Invoke-DriveAttack.ps1.  If not, see <http://www.gnu.org/licenses/>.
-
-#>
-            
-Function Invoke-DriveAttack
+#requires -Version 2  
+Function Invoke-DriveSEAttack
 {
     <#
+            # All credit to the original author(s): Ryan Watson (Watson0x90)
+            #
+            # Invoke-DriveAttack.ps1 is free software: you can redistribute it and/or modify
+            # it under the terms of the GNU General Public License as published by
+            # the Free Software Foundation, either version 3 of the License, or
+            # (at your option) any later version.
+            #
+            # Invoke-DriveAttack.ps1 is distributed in the hope that it will be useful,
+            # but WITHOUT ANY WARRANTY; without even the implied warranty of
+            # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+            # GNU General Public License for more details.
+            #
+            # You should have received a copy of the GNU General Public License
+            # along with Invoke-DriveAttack.ps1.  If not, see <http://www.gnu.org/licenses/>.
+
             .SYNOPSIS 
             
             Social engineering attack prompting users re-enter credentials for 
