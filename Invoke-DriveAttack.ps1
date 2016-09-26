@@ -17,7 +17,7 @@
 
 #>
             
-Function Invoke-DriveSEAttack
+Function Invoke-DriveAttack
 {
     <#
             .SYNOPSIS 
