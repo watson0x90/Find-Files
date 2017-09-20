@@ -14,12 +14,7 @@ function Find-CCData
             Also depending on the office version installed, you might need ot run powershell from:
             C:\Windows\SysWOW64\WindowsPowershell\v1.0\powershell.exe
         
-            Test CC Files
-            $file = "C:\Users\ryan\Documents\Test-CC\TestCCNums.xlsx"
-            $file = "C:\Users\ryan\Documents\Test-CC\TestCCNums.xls"
-            $file = "C:\Users\ryan\Documents\Test-CC\NoCCNumbers.xlsx"
-            $file = "C:\Users\ryan\Documents\Test-CC\TestCCNums-2.xlsx"
-            $file = "C:\Users\ryan\Documents\Test-CC\Test-CCNum.doc"
+	    To generate test credit card data, use the following site: http://www.getcreditcardnumbers.com/
 
             CC RegEx
             '\b(?:4[0-9]{12}(?:[0-9]{3})?       # Visa
@@ -49,7 +44,7 @@ function Find-CCData
         [ValidateNotNullOrEmpty()]
         [String] $out,
 		
-		[Parameter(Mandatory = $false, position = 2)]
+	[Parameter(Mandatory = $false, position = 2)]
         [ValidateNotNullOrEmpty()]
         [Switch] $office = $false,
 		
