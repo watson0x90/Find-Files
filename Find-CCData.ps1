@@ -1,8 +1,13 @@
 function Find-CCData
 {
     <#
-            If statements to read file extensions and then act appropriately
-        
+            If statements to read file extensions and then act accordingly. This was initially designed to scan
+	    an entire host looking for potential locations where credit card data might be stored. Programs will 
+	    write temporary files within their own program directory or even temp directories. 
+	    
+	    Author: Ryan Watson
+	    Additional credit goes to: @harmj0y, @darkoperator, the PowerShell Mafia and likely people on stack overflow. 
+            		
             Requires Office to be installed to scan Word Documents and Excel Documents.
             For excel an additaionl driver needs to be installed depending on version of office installed
             on the scanning host.
